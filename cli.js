@@ -1,7 +1,10 @@
 #!/usr/bin/env node
 
-// Simply stub for running the BBCode parser over input files to translate into
-// BBCode.
+// Simple stub for running the BBCode parser over input files to translate into
+// BBCode. There's a good chance that a future version of this will move the
+// CLI into its own module because concpetually this is a library and not a
+// tool. Also this may be turned into a stub to a CoffeeScript version for
+// consistency.
 
 var bbcode = require("./lib/bbcode");
 

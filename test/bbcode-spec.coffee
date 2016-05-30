@@ -39,6 +39,8 @@ describe "BBCode parser", ->
     it "ignores tags without URLs in them", ->
       text = bbcode("[url]not a url[/url]")
       expect(text).to.equal "<p>[url]not a url[/url]</p>"
+    it "allows HTTP URLs in an arg-less [url] tag", ->
+      expect(bbcode("[url]http://www.example.com/[/url]")).to.equal "<p><a href=\"http://www.example.com/\" rel=\"nofollow\">http://www.example.com/</a></p>"
     it "allows HTTP URLs", ->
       text = bbcode("[url=http://www.example.com]test[/url]")
       expect(text).to.equal "<p><a href=\"http://www.example.com\" rel=\"nofollow\">test</a></p>"

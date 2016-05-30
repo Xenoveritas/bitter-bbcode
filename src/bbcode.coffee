@@ -3,15 +3,14 @@
 # Tags may optionally take an argument, and closing tags may optionally require
 # the closing argument to match. (So [list=1][/list=1] versus [list=1][/list])
 
-# Utility functions
+# Import utility functions
+
+{escapeHTML, escapeHTMLAttr, convertNewlinesToHTML} = require "./htmlutil"
+
+# Checks to see if a URL is "valid" - currently that means starts with
+# "http", "https", or "ftp".
 isValidURL = (url) ->
   /^(?:https?|ftp):\/\//i.test(url)
-
-escapeHTML = (str) ->
-  str.replace(/&/g, '&amp;').replace(/</g, '&lt;').replace(/>/g, '&gt;')
-
-escapeHTMLAttr = (str) ->
-  escapeHTML(str).replace(/"/g, '&quot;').replace(/'/g, '&#39;')
 
 class TextEvent
   constructor: (state, text) ->
@@ -69,10 +68,14 @@ class URLTag extends Tag
     super(null)
 
   onStartTag: (event) ->
-    if isValidURL event.arg
-      new BBElement("<a href=\"#{escapeHTMLAttr(event.arg)}\" rel=\"nofollow\">", "</a>")
+    if event.arg?
+      if isValidURL event.arg
+        new BBURLElement(event.raw, event.arg)
+      else
+        null
     else
-      null
+      # How this gets handled depends on the content.
+      new BBURLElement(event.raw)
 
 class ImgTag extends Tag
   constructor: ->
@@ -100,18 +103,6 @@ class CodeTag extends Tag
   onStartTag: (event) ->
     # We can optionally have an arg that tells us what type of code it is
     new BBCodeElement(event.raw)
-
-convertNewlinesToHTML = (text) ->
-  if (text.length == 0)
-    return "<p></p>";
-  # First, normalize newlines
-  text = text.replace(/\r\n/g, "\n").replace(/\r/g, "\n")
-  # Remove the final newline if there is one
-  if (text.charAt(text.length-1) == "\n")
-    text = text.substring(0,text.length-1)
-  # And convert
-  text = text.replace(/\n/g, "<br>\n").replace(/<br>\n<br>\n/g, "</p>\n\n<p>")
-  '<p>' + text + '</p>'
 
 class TagTokenizer
   constructor: (str) ->
@@ -195,43 +186,6 @@ class TagTokenizer
         @currentOffset = idx
         return tok
 
-class HTMLBlock
-  constructor: (html, newlines, smileys) ->
-    @html = html
-    @newlines = newlines
-    @smileys = smileys
-
-  append: (block) ->
-    block.prev = this
-    @next = block
-
-  # Merge matching blocks together. If a block has identical transforms, it will
-  # be merged into a new, single block.
-  merge: ->
-    current = this
-    next = current.next
-    while next?
-      if current.newlines == next.newlines and current.smileys == next.smileys
-        current.html += next.html
-        # Remove the merged block from the list
-        current.next = next.next
-        current.next.prev = current
-      else
-        next = current.next
-
-  transform: (parser) ->
-    html = []
-    current = this
-    while current?
-      text = current.html
-      if current.newlines
-        text = convertNewlinesToHTML(text)
-      if current.smileys
-        text = parser.replaceSmileys(text)
-      html.push(text)
-      current = current.next
-    html.join('')
-
 # A node in a BBCode document.
 class BBNode
   constructor: ->
@@ -279,11 +233,8 @@ class BBNode
     html.join('')
 
 class BBElement extends BBNode
-  constructor: (start, end, nests = true) ->
+  constructor: (@htmlStart, @htmlEnd, @nests = true) ->
     super()
-    @htmlStart = start
-    @htmlEnd = end
-    @nests = nests
 
   onChildTag: (event) ->
     @nests
@@ -291,11 +242,42 @@ class BBElement extends BBNode
   toHTML: ->
     @htmlStart + super + @htmlEnd
 
+class BBURLElement extends BBElement
+  constructor: (@rawStart, @url) ->
+    super("<a>", "</a>")
+
+  onChildTag: (event) ->
+    # If we have a URL, we can just return true. Otherwise, we have to decide
+    # if we want to allow [ and ] in URLs. Right now, I'm deciding "no" which
+    # means we should allow nesting and ignore the contents.
+    true
+
+  _makeLink: (url) ->
+    "<a href=\"#{escapeHTMLAttr(url)}\" rel=\"nofollow\">"
+
+  toHTML: ->
+    if @url?
+      @htmlStart = "<a href=\"#{escapeHTMLAttr(@url)}\" rel=\"nofollow\">"
+      super
+    else
+      # If we have no URL but our content is solely text, see if we can use it
+      # as a URL.
+      if @children.length is 1
+        child = @children[0]
+        if child instanceof BBText
+          url = child.data
+          if isValidURL url
+            @htmlStart = @_makeLink(url)
+            return super
+      @htmlStart = escapeHTML(@rawStart)
+      @htmlEnd = "[/url]"
+      super
+
 class BBQuoteElement extends BBElement
   constructor: (quoted) ->
     super("<blockquote>", "</blockquote>")
     # The "quoted" part should be parsed as BBCode as well. For some reason.
-    # Don't, yes.
+    # This doesn't, yet.
     if quoted?
       @htmlStart = "<div class=\"quoted-name\">#{escapeHTML(quoted)}</div>" + @htmlStart
 
@@ -455,11 +437,11 @@ class BBCodeParser
 
   @ROOT_TAG: Tag
   @DEFAULT_TAGS:
-    'url': new URLTag,
-    'img': new ImgTag,
-    'quote': new QuoteTag,
+    'url': new URLTag(),
+    'img': new ImgTag(),
+    'quote': new QuoteTag(),
 #    'pre': PreTag,
-    'code': new CodeTag,
+    'code': new CodeTag(),
     'b': new SimpleTag("b"),
     'i': new SimpleTag("i"),
     'u': new SimpleTag("u"),
@@ -469,13 +451,13 @@ class BBCodeParser
 
   # A restrictive set of basic tags.
   @BASIC_TAGS:
-    'url': new URLTag,
-    'b': new SimpleTag "b",
-    'i': new SimpleTag "i",
-    'u': new SimpleTag "u",
-    's': new SimpleTag "strike",
-    'sub': new SimpleTag "sub",
-    'super': new SimpleTag "super"
+    'url': new URLTag(),
+    'b': new SimpleTag("b"),
+    'i': new SimpleTag("i"),
+    'u': new SimpleTag("u"),
+    's': new SimpleTag("strike"),
+    'sub': new SimpleTag("sub"),
+    'super': new SimpleTag("super")
 
   # Built-in smilies based on Emoji, I guess.
   @DEFAULT_SMILIES: [
