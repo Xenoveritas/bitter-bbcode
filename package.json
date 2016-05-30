@@ -1,7 +1,8 @@
 {
   "name": "bbcode",
-  "version": "1.0.0",
+  "version": "0.0.1",
   "description": "A module for parsing BBCode and translating it to HTML.",
+  "repository": "https://github.com/Xenoveritas/bbcode.git",
   "main": "./lib/bbcode.js",
   "bin": "./cli.js",
   "scripts": {

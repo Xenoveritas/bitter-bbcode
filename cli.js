@@ -3,7 +3,7 @@
 // Simply stub for running the BBCode parser over input files to translate into
 // BBCode.
 
-var bbcode = require("./bbcode");
+var bbcode = require("./lib/bbcode");
 
 var files = [];
 for (var i = k = 2, ref = process.argv.length - 1; 2 <= ref ? k <= ref : k >= ref; i = 2 <= ref ? ++k : --k) {
@@ -12,5 +12,5 @@ for (var i = k = 2, ref = process.argv.length - 1; 2 <= ref ? k <= ref : k >= re
 var fs = require('fs');
 files.forEach(function(f) {
   console.log("Reading %s...", f);
-  return process.stdout.write(bbcode.bbcode(fs.readFileSync(f)));
+  return process.stdout.write(bbcode(fs.readFileSync(f)));
 });

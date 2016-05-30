@@ -86,6 +86,13 @@ class ImgTag extends Tag
       # value
       new BBImgElement(event.raw)
 
+class QuoteTag extends Tag
+  constructor: ->
+    super(null)
+
+  onStartTag: (event) ->
+    new BBQuoteElement(event.arg)
+
 class CodeTag extends Tag
   constructor: ->
     super(null)
@@ -284,6 +291,14 @@ class BBElement extends BBNode
   toHTML: ->
     @htmlStart + super + @htmlEnd
 
+class BBQuoteElement extends BBElement
+  constructor: (quoted) ->
+    super("<blockquote>", "</blockquote>")
+    # The "quoted" part should be parsed as BBCode as well. For some reason.
+    # Don't, yes.
+    if quoted?
+      @htmlStart = "<div class=\"quoted-name\">#{escapeHTML(quoted)}</div>" + @htmlStart
+
 class BBImgElement extends BBNode
   constructor: (@rawStart) ->
     super
@@ -428,18 +443,21 @@ class Smiley
     text.replace @regexp, @replacement
 
 class BBCodeParser
-  constructor: ->
+  constructor: (options) ->
+    tags = BBCodeParser.DEFAULT_TAGS
+    if options?.tags is "basic"
+      tags = BBCodeParser.BASIC_TAGS
     # Clone the tags as a new object since they may be altered.
     @tags = {}
-    for name, tag of BBCodeParser.DEFAULT_TAGS
+    for name, tag of tags
       @tags[name] = tag
     @smileys = BBCodeParser.DEFAULT_SMILIES.slice()
 
   @ROOT_TAG: Tag
   @DEFAULT_TAGS:
-    'url': new URLTag(),
-    'img': new ImgTag(),
-#    'quote': QuoteTag,
+    'url': new URLTag,
+    'img': new ImgTag,
+    'quote': new QuoteTag,
 #    'pre': PreTag,
     'code': new CodeTag,
     'b': new SimpleTag("b"),
@@ -448,6 +466,16 @@ class BBCodeParser
     's': new SimpleTag("strike"),
     'sub': new SimpleTag("sub"),
     'super': new SimpleTag("super")
+
+  # A restrictive set of basic tags.
+  @BASIC_TAGS:
+    'url': new URLTag,
+    'b': new SimpleTag "b",
+    'i': new SimpleTag "i",
+    'u': new SimpleTag "u",
+    's': new SimpleTag "strike",
+    'sub': new SimpleTag "sub",
+    'super': new SimpleTag "super"
 
   # Built-in smilies based on Emoji, I guess.
   @DEFAULT_SMILIES: [
@@ -496,7 +524,9 @@ bbcode = (str) ->
 bbcode.escapeHTML = escapeHTML
 bbcode.escapeHTMLAttr = escapeHTMLAttr
 
-exports.bbcode = bbcode
+module.exports = (str) ->
+  bbcode(str)
+
 exports.Tag = Tag
 exports.BBCodeParser = BBCodeParser
 exports.BBNode = BBNode
