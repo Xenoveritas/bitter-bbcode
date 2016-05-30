@@ -6,7 +6,7 @@
   "main": "./lib/bbcode.js",
   "bin": "./cli.js",
   "scripts": {
-    "prepublish": "coffee -o lib -c src/bbcode.coffee",
+    "install": "coffee -o lib -c src/bbcode.coffee",
     "test": "mocha --compilers coffee:coffee-script/register"
   },
   "keywords": [
@@ -14,9 +14,11 @@
   ],
   "author": "Xenoveritas",
   "license": "MIT",
+  "dependencies": {
+    "coffee-script": "^1.10.0"
+  },
   "devDependencies": {
     "chai": "^3.5.0",
-    "coffee-script": "^1.10.0",
     "mocha": "^2.5.3"
   }
 }

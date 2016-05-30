@@ -1,4 +1,6 @@
-# bbcode
+# bbcode - compile on install branch
+
+This branch compiles on install rather than on publish. As this module isn't published yet, you need to use this branch if you want to include it as an NPM dependency.
 
 A simple BBCode parser.
 
