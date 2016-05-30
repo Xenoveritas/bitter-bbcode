@@ -1,0 +1,5 @@
+# Ignore "compiled" lib code.
+/lib/**/*.js
+
+# Ignore installed modules
+/node_modules
