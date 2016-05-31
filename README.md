@@ -47,7 +47,7 @@ BBCode            | Description                                        | Support
 [super]           | Superscript text                                   | :white_check_mark:
 [color=*color*]   | Text in the specified color                        | :x:
 [size=*size*]     | Change text size                                   | :x:
-[url]             | Link                                               | :x:
+[url]             | Link                                               | :white_check_mark:
 [url=*url*]       | Link                                               | :white_check_mark:
 [img]             | Image                                              | :white_check_mark:
 [list]            | Unordered List                                     | :x:
@@ -55,8 +55,11 @@ BBCode            | Description                                        | Support
 [list=a]          | Alphabetically Ordered List                        | :x:
 [quote]           | Quote                                              | :white_check_mark:
 [quote="*name*"]  | Quote with a given name                            | :white_check_mark:
-[code]            | BBCode ignored code block                          | :warning:
-[code=*language*] | BBCode ignored code block with syntax highlighting | :warning:
+[code]            | BBCode ignored code block                          | :warning:¹
+[code=*language*] | BBCode ignored code block with syntax highlighting | :warning:¹ ²
+
+¹ Currently included in `<p>`/`<br>` creation
+² Syntax highlighting is not supported
 
 ### BBCode by bulletin board software
 

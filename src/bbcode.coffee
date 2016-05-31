@@ -6,6 +6,7 @@
 # Import utility functions
 
 {escapeHTML, escapeHTMLAttr, convertNewlinesToHTML} = require "./htmlutil"
+BlockList = require './blocks'
 
 # Checks to see if a URL is "valid" - currently that means starts with
 # "http", "https", or "ftp".
@@ -218,19 +219,12 @@ class BBNode
   appendText: (text) ->
     @appendChild(new BBText(text))
 
-  toBlock: ->
-
-
-  # Convert this node to HTML. Uses toBlock to deal with the actual
-  # transformation. Use toBlock instead of this method as it properly separates
-  # text into individual segments that indicate how newline handling should
-  # work within them.
-  toHTML: ->
-    # Assume all our children do something
-    html = []
-    @children.forEach (child) ->
-      html.push(child.toHTML())
-    html.join('')
+  # Convert this element to a block that can later be converted to HTML. The
+  # process is a two-step process to avoid translations of smileys and the like
+  # within certain blocks.
+  makeBlocks: (list) ->
+    for child in @children
+      child.makeBlocks(list)
 
 class BBElement extends BBNode
   constructor: (@htmlStart, @htmlEnd, @nests = true) ->
@@ -239,8 +233,10 @@ class BBElement extends BBNode
   onChildTag: (event) ->
     @nests
 
-  toHTML: ->
-    @htmlStart + super + @htmlEnd
+  makeBlocks: (list) ->
+    list.append(@htmlStart)
+    super(list)
+    list.append(@htmlEnd)
 
 class BBURLElement extends BBElement
   constructor: (@rawStart, @url) ->
@@ -255,10 +251,9 @@ class BBURLElement extends BBElement
   _makeLink: (url) ->
     "<a href=\"#{escapeHTMLAttr(url)}\" rel=\"nofollow\">"
 
-  toHTML: ->
+  makeBlocks: (list) ->
     if @url?
       @htmlStart = "<a href=\"#{escapeHTMLAttr(@url)}\" rel=\"nofollow\">"
-      super
     else
       # If we have no URL but our content is solely text, see if we can use it
       # as a URL.
@@ -268,10 +263,10 @@ class BBURLElement extends BBElement
           url = child.data
           if isValidURL url
             @htmlStart = @_makeLink(url)
-            return super
+            return super(list)
       @htmlStart = escapeHTML(@rawStart)
       @htmlEnd = "[/url]"
-      super
+    super(list)
 
 class BBQuoteElement extends BBElement
   constructor: (quoted) ->
@@ -294,12 +289,12 @@ class BBImgElement extends BBNode
       @rawEnd = event.raw
     else
       @rawEnd = ""
-  toHTML: ->
+  makeBlocks: (list) ->
     url = @url.join('')
     if isValidURL(url)
-      "<img src=\"#{escapeHTMLAttr(url)}\">"
+      list.appendHTML("<img src=\"#{escapeHTMLAttr(url)}\">")
     else
-      escapeHTML(@rawStart + url + @rawEnd)
+      list.appendHTML(escapeHTML(@rawStart + url + @rawEnd))
 
 class BBPreElement extends BBNode
   constructor: (@element = "pre") ->
@@ -309,22 +304,22 @@ class BBPreElement extends BBNode
     false
   onText: (event) ->
     @content.push(event.text)
-  toHTML: ->
-    "<#{@element}>#{escapeHTML(@content.join(''))}</#{@element}>"
+  makeBlocks: (list) ->
+    list.appendRawHTML("<#{@element}>#{escapeHTML(@content.join(''))}</#{@element}>")
 
 class BBCodeElement extends BBPreElement
   constructor: (@codeType) ->
     super
-  toHTML: ->
-    "<pre><code>#{escapeHTML(@content.join(''))}</code></pre>"
+  makeBlocks: (list) ->
+    list.appendRawHTML("<pre><code>#{escapeHTML(@content.join(''))}</code></pre>")
 
 class BBText extends BBNode
   data: ""
   constructor: (data) ->
     super()
     @data = data
-  toHTML: ->
-    escapeHTML @data
+  makeBlocks: (list) ->
+    list.append(escapeHTML(@data))
 
 # Root of the BBCode document.
 class BBDocument extends BBNode
@@ -332,9 +327,10 @@ class BBDocument extends BBNode
     super
   onChildTag: (event) ->
     true
-  toHTML: ->
-    # FIXME: This won't work with [code] and [pre]
-    convertNewlinesToHTML(super())
+  toBlocks: ->
+    list = new BlockList()
+    @makeBlocks(list)
+    list
 
 # Parse state.
 class BBParse extends BBNode
@@ -494,14 +490,10 @@ class BBCodeParser
       html = smiley.replace(html)
     html
 
-  transform: (str) ->
-    @replaceSmileys(@parse(str).toHTML())
-
 defaultParser = new BBCodeParser()
 
 bbcode = (str) ->
-  defaultParser.parse(str).toHTML()
-  #defaultParser.transform(str)
+  defaultParser.parse(str).toBlocks().transform(defaultParser)
 
 bbcode.escapeHTML = escapeHTML
 bbcode.escapeHTMLAttr = escapeHTMLAttr
