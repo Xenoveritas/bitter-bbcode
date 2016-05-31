@@ -39,6 +39,8 @@ describe "BBCode parser", ->
     it "ignores tags without URLs in them", ->
       text = bbcode("[url]not a url[/url]")
       expect(text).to.equal "<p>[url]not a url[/url]</p>"
+    it "allows HTTP URLs in an arg-less [url] tag", ->
+      expect(bbcode("[url]http://www.example.com/[/url]")).to.equal "<p><a href=\"http://www.example.com/\" rel=\"nofollow\">http://www.example.com/</a></p>"
     it "allows HTTP URLs", ->
       text = bbcode("[url=http://www.example.com]test[/url]")
       expect(text).to.equal "<p><a href=\"http://www.example.com\" rel=\"nofollow\">test</a></p>"
@@ -57,53 +59,15 @@ describe "BBCode parser", ->
       text = bbcode("[img]not a url[/img]")
       expect(text).to.equal "<p>[img]not a url[/img]</p>"
 
-  # describe "when handling [code] tags", ->
-  #   it "includes start and end tags", ->
-  #     runs ->
-  #       text = bbcode("""
-  #         [code]
-  #         This is some code.
-  #         [/code]
-  #       """)
-  #       expect(text).to.equal """
-  #         <pre>
-  #         This is some code.
-  #         </pre>
-  #       """
-
-  describe "when converting newlines", ->
-    it "creates paragraphs", ->
-      html = bbcode("""
-        This is some text that is split into paragraphs.
-
-        This is the second paragraph. It should be in its own tag.
-      """)
-      expect(html).to.equal """
-        <p>This is some text that is split into paragraphs.</p>
-
-        <p>This is the second paragraph. It should be in its own tag.</p>
-      """
-    it "deals with single lines", ->
-      html = bbcode("""
-        This is some text that is split into lines.
-        Each line should end in a break.
-        The entire block should be in a paragraph.
-      """)
-      expect(html).to.equal """
-        <p>This is some text that is split into lines.<br>
-        Each line should end in a break.<br>
-        The entire block should be in a paragraph.</p>
-      """
-
-    it "doesn't include a double newline at the end", ->
+  describe "when handling [code] tags", ->
+    it "includes start and end tags", ->
       text = bbcode("""
-        This is a block of text
-        as if it had come from
-        the editor
-
+        [code]
+        This is some code.
+        [/code]
       """)
-      expect(text).to.equal("""
-        <p>This is a block of text<br>
-        as if it had come from<br>
-        the editor</p>
-      """)
+      expect(text).to.equal """
+        <pre><code>
+        This is some code.
+        </code></pre>
+      """

@@ -3,15 +3,13 @@
 # Tags may optionally take an argument, and closing tags may optionally require
 # the closing argument to match. (So [list=1][/list=1] versus [list=1][/list])
 
-# Utility functions
-isValidURL = (url) ->
-  /^(?:https?|ftp):\/\//i.test(url)
+# Import utility functions
 
-escapeHTML = (str) ->
-  str.replace(/&/g, '&amp;').replace(/</g, '&lt;').replace(/>/g, '&gt;')
+{BBDocument, BBNode} = require "./bbdom"
+tags = require './tags'
+BlockList = require './blocks'
 
-escapeHTMLAttr = (str) ->
-  escapeHTML(str).replace(/"/g, '&quot;').replace(/'/g, '&#39;')
+{SimpleTag} = tags
 
 class TextEvent
   constructor: (state, text) ->
@@ -23,95 +21,6 @@ class TagEvent
     @state = state
     @tag = token.name
     {@arg, @raw} = token
-
-# A BBCode Tag.
-#
-# The Tag class is basically a BBNode factory - a class that can
-# create BBNodes inside the parse tree.
-#
-# As such the tag class itself only handles receives events that create BBNodes.
-# Once the BBNode is added and stuffed on the top of the stack, it receives
-# further parse events until the parse is complete.
-#
-# The default Tag class can be given a BBNode class that will be instantiated
-# whenever onStartTag is received. If the start tag has arguments, it will be
-# assumed to be invalid and nothing will be added.
-class Tag
-  constructor: (nodeClass) ->
-    @nodeClass = nodeClass
-
-  # Indicates that a tag for this tag class is starting. This method should
-  # create and return an appropriate BBNode that will handle the remaining
-  # parse events. If this tag cannot handle this event (for example, the
-  # arguments are invalid), it should return <code>null</code> in which case it
-  # will be converted into a corresponding text event and delivered to the
-  # current node.
-  onStartTag: (event) ->
-    if event.arg?
-      null
-    else
-      new @nodeClass()
-
-class SimpleTag extends Tag
-  constructor: (htmlElement) ->
-    super()
-    @htmlStart = "<#{htmlElement}>"
-    @htmlEnd = "</#{htmlElement}>"
-
-  onStartTag: (event) ->
-    if event.arg?
-      null
-    else
-      new BBElement(@htmlStart, @htmlEnd)
-
-class URLTag extends Tag
-  constructor: ->
-    super(null)
-
-  onStartTag: (event) ->
-    if isValidURL event.arg
-      new BBElement("<a href=\"#{escapeHTMLAttr(event.arg)}\" rel=\"nofollow\">", "</a>")
-    else
-      null
-
-class ImgTag extends Tag
-  constructor: ->
-    super(null)
-
-  onStartTag: (event) ->
-    if event.arg?
-      null
-    else
-      # Because we won't know if it's valid until after it ends, store the raw
-      # value
-      new BBImgElement(event.raw)
-
-class QuoteTag extends Tag
-  constructor: ->
-    super(null)
-
-  onStartTag: (event) ->
-    new BBQuoteElement(event.arg)
-
-class CodeTag extends Tag
-  constructor: ->
-    super(null)
-
-  onStartTag: (event) ->
-    # We can optionally have an arg that tells us what type of code it is
-    new BBCodeElement(event.raw)
-
-convertNewlinesToHTML = (text) ->
-  if (text.length == 0)
-    return "<p></p>";
-  # First, normalize newlines
-  text = text.replace(/\r\n/g, "\n").replace(/\r/g, "\n")
-  # Remove the final newline if there is one
-  if (text.charAt(text.length-1) == "\n")
-    text = text.substring(0,text.length-1)
-  # And convert
-  text = text.replace(/\n/g, "<br>\n").replace(/<br>\n<br>\n/g, "</p>\n\n<p>")
-  '<p>' + text + '</p>'
 
 class TagTokenizer
   constructor: (str) ->
@@ -194,165 +103,6 @@ class TagTokenizer
         tok = { type: 'text', text: @str.substring(@currentOffset, idx) }
         @currentOffset = idx
         return tok
-
-class HTMLBlock
-  constructor: (html, newlines, smileys) ->
-    @html = html
-    @newlines = newlines
-    @smileys = smileys
-
-  append: (block) ->
-    block.prev = this
-    @next = block
-
-  # Merge matching blocks together. If a block has identical transforms, it will
-  # be merged into a new, single block.
-  merge: ->
-    current = this
-    next = current.next
-    while next?
-      if current.newlines == next.newlines and current.smileys == next.smileys
-        current.html += next.html
-        # Remove the merged block from the list
-        current.next = next.next
-        current.next.prev = current
-      else
-        next = current.next
-
-  transform: (parser) ->
-    html = []
-    current = this
-    while current?
-      text = current.html
-      if current.newlines
-        text = convertNewlinesToHTML(text)
-      if current.smileys
-        text = parser.replaceSmileys(text)
-      html.push(text)
-      current = current.next
-    html.join('')
-
-# A node in a BBCode document.
-class BBNode
-  constructor: ->
-    @parent = null
-    @children = []
-
-  # Receives notification that a child tag has been found. This is sent prior to
-  # the tag being sent an onStartTag event and may be used to prevent the tag
-  # event from being sent at all. If this node doesn't accept children, this
-  # may instead return false, which will halt further processing and likely
-  # cause an onText event.
-  onChildTag: (event) ->
-    false
-
-  # Receives notification that an end tag was received. The end tag may or may
-  # not correspond to the opening tag.
-  onEndTag: (event) ->
-    false
-
-  onText: (event) ->
-    @appendText(event.text)
-
-  appendChild: (child) ->
-    if child.parent != null
-      throw new Error("Attempting to add child that already has a parent")
-    child.parent = this
-    @children.push(child)
-    child
-
-  appendText: (text) ->
-    @appendChild(new BBText(text))
-
-  toBlock: ->
-
-
-  # Convert this node to HTML. Uses toBlock to deal with the actual
-  # transformation. Use toBlock instead of this method as it properly separates
-  # text into individual segments that indicate how newline handling should
-  # work within them.
-  toHTML: ->
-    # Assume all our children do something
-    html = []
-    @children.forEach (child) ->
-      html.push(child.toHTML())
-    html.join('')
-
-class BBElement extends BBNode
-  constructor: (start, end, nests = true) ->
-    super()
-    @htmlStart = start
-    @htmlEnd = end
-    @nests = nests
-
-  onChildTag: (event) ->
-    @nests
-
-  toHTML: ->
-    @htmlStart + super + @htmlEnd
-
-class BBQuoteElement extends BBElement
-  constructor: (quoted) ->
-    super("<blockquote>", "</blockquote>")
-    # The "quoted" part should be parsed as BBCode as well. For some reason.
-    # Don't, yes.
-    if quoted?
-      @htmlStart = "<div class=\"quoted-name\">#{escapeHTML(quoted)}</div>" + @htmlStart
-
-class BBImgElement extends BBNode
-  constructor: (@rawStart) ->
-    super
-    @url = []
-  onChildTag: (event) ->
-    false
-  onText: (event) ->
-    @url.push(event.text)
-  onEndTag: (event) ->
-    if event.tag == 'img'
-      @rawEnd = event.raw
-    else
-      @rawEnd = ""
-  toHTML: ->
-    url = @url.join('')
-    if isValidURL(url)
-      "<img src=\"#{escapeHTMLAttr(url)}\">"
-    else
-      escapeHTML(@rawStart + url + @rawEnd)
-
-class BBPreElement extends BBNode
-  constructor: (@element = "pre") ->
-    super
-    @content = []
-  onChildTag: (event) ->
-    false
-  onText: (event) ->
-    @content.push(event.text)
-  toHTML: ->
-    "<#{@element}>#{escapeHTML(@content.join(''))}</#{@element}>"
-
-class BBCodeElement extends BBPreElement
-  constructor: (@codeType) ->
-    super
-  toHTML: ->
-    "<pre><code>#{escapeHTML(@content.join(''))}</code></pre>"
-
-class BBText extends BBNode
-  data: ""
-  constructor: (data) ->
-    super()
-    @data = data
-  toHTML: ->
-    escapeHTML @data
-
-# Root of the BBCode document.
-class BBDocument extends BBNode
-  constructor: ->
-    super
-  onChildTag: (event) ->
-    true
-  toHTML: ->
-    # FIXME: This won't work with [code] and [pre]
-    convertNewlinesToHTML(super())
 
 # Parse state.
 class BBParse extends BBNode
@@ -453,13 +203,13 @@ class BBCodeParser
       @tags[name] = tag
     @smileys = BBCodeParser.DEFAULT_SMILIES.slice()
 
-  @ROOT_TAG: Tag
+  @ROOT_TAG: tags.Tag
   @DEFAULT_TAGS:
-    'url': new URLTag,
-    'img': new ImgTag,
-    'quote': new QuoteTag,
+    'url': new tags.URLTag(),
+    'img': new tags.ImgTag(),
+    'quote': new tags.QuoteTag(),
 #    'pre': PreTag,
-    'code': new CodeTag,
+    'code': new tags.CodeTag(),
     'b': new SimpleTag("b"),
     'i': new SimpleTag("i"),
     'u': new SimpleTag("u"),
@@ -469,13 +219,13 @@ class BBCodeParser
 
   # A restrictive set of basic tags.
   @BASIC_TAGS:
-    'url': new URLTag,
-    'b': new SimpleTag "b",
-    'i': new SimpleTag "i",
-    'u': new SimpleTag "u",
-    's': new SimpleTag "strike",
-    'sub': new SimpleTag "sub",
-    'super': new SimpleTag "super"
+    'url': new tags.URLTag(),
+    'b': new SimpleTag("b"),
+    'i': new SimpleTag("i"),
+    'u': new SimpleTag("u"),
+    's': new SimpleTag("strike"),
+    'sub': new SimpleTag("sub"),
+    'super': new SimpleTag("super")
 
   # Built-in smilies based on Emoji, I guess.
   @DEFAULT_SMILIES: [
@@ -512,22 +262,15 @@ class BBCodeParser
       html = smiley.replace(html)
     html
 
-  transform: (str) ->
-    @replaceSmileys(@parse(str).toHTML())
-
 defaultParser = new BBCodeParser()
 
 bbcode = (str) ->
-  defaultParser.parse(str).toHTML()
-  #defaultParser.transform(str)
-
-bbcode.escapeHTML = escapeHTML
-bbcode.escapeHTMLAttr = escapeHTMLAttr
+  defaultParser.parse(str).toBlocks().transform(defaultParser)
 
 module.exports = (str) ->
   bbcode(str)
 
-exports.Tag = Tag
+exports.Tag = tags.Tag
 exports.BBCodeParser = BBCodeParser
 exports.BBNode = BBNode
 exports.BBDocument = BBDocument

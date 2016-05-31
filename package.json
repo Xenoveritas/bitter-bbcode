@@ -6,7 +6,7 @@
   "main": "./lib/bbcode.js",
   "bin": "./cli.js",
   "scripts": {
-    "install": "coffee -o lib -c src/bbcode.coffee",
+    "install": "globstar -- coffee -o lib -c src/*.coffee",
     "test": "mocha --compilers coffee:coffee-script/register"
   },
   "keywords": [
@@ -15,7 +15,8 @@
   "author": "Xenoveritas",
   "license": "MIT",
   "dependencies": {
-    "coffee-script": "^1.10.0"
+    "coffee-script": "^1.10.0",
+    "globstar": "^1.0.0"
   },
   "devDependencies": {
     "chai": "^3.5.0",
