@@ -1,0 +1,152 @@
+This page is a simple list of various types of BBCode to attempt to determine how BBCode is actually implemented in a given parser. As such it contains some edge cases to determine how they're handled.
+
+[b]Regular bold tag[/b]
+[B]Upper-case bold tag[/B]
+[b]Mixed case[/B] bold tag[/b]
+
+[size=200][b][u]Formatting Test[/u][/b][/size]
+
+[size=32768]Excessively large text[/size]
+[color=red]Red text[/color]
+[color=#1050FF]#1050FF text[/color]
+[color=1050FF]1050FF text[/color]
+[color=#ECF]#ECF text[/color]
+[color=ECF]ECF text[/color]
+
+Same thing with quotes:
+[size="32768"]Excessively large text[/size]
+[color="red"]Red text[/color]
+[color="#1050FF"]#1050FF text[/color]
+[color="1050FF"]1050FF text[/color]
+[color="#ECF"]#ECF text[/color]
+[color="ECF"]ECF text[/color]
+
+[s]Strike-through[/s]
+[super]Super script[/super]
+[sub]Sub script[/sub]
+
+[url]http://www.example.com/a%20very%20long%20URL%20that%20arguably%20should%20be%20truncated%20at%20some%20point%20to%20make%20it%20readable[/url]
+[url=http://www.example.com]Just a regular link[/url]
+[url=http://www.example.com/a link with invalid spaces]A bad link with spaces in it[/url]
+
+Same links with quotes:
+[url="http://www.example.com"]Just a regular link[/url]
+[url="http://www.example.com/a link with invalid spaces"]A bad link with spaces in it[/url]
+
+[img]some garbage[/img]
+[img]http://www.example.com/some/image[/img]
+
+[quote="The Wikipedia"]
+Test of a quote with the author in quotes
+[/quote]
+
+[quote="[url=http://en.wikipedia.org/]The [i]Wikipedia[/i][/url]"]
+Test of a quote with the author in quotes, including BBCode
+[/quote]
+
+[quote=The Wikipedia]
+Test of a quote without the author in quotes
+[/quote]
+
+[quote=[url=http://en.wikipedia.org/]The [i]Wikipedia[/i][/url]]
+Test of a quote without the author in quotes
+[/quote]
+
+[quote]Quote on one line[/quote]
+
+[quote]
+Quote on
+multiple limes
+[/quote]
+
+[QUOTE]
+All caps quote
+[/QUOTE]
+
+[QuOte]
+Mixed case quote and different cased end tag
+[/qUotE]
+
+[QUotE]
+Mixed case quote and same cased end tag
+[/QUotE]
+
+[code]
+{
+  "just": "some",
+  "json": [
+    "for", "a"
+  ],
+  "simple": "test"
+}
+[/code]
+
+[code=json]
+{
+  "just": "some",
+  "json": [
+    "for", "a"
+  ],
+  "simple": "test"
+}
+[/code]
+
+[code=php]
+<?php
+echo "Not every language should be supported."
+?>
+[/code]
+
+[code="php"]
+<?php
+echo "Not every language should be supported."
+?>
+[/code]
+
+[list][*]Lists
+[*]tend
+[*]to
+[*]suck in bbcode[/list]
+
+[list]
+[*]Another
+[*]style
+[*]of
+[*]list
+[/list]
+
+[list=1]
+[*] 1
+[*] 2
+[*] 3
+[/list]
+
+[list=1]
+[*] 4
+[*] 5
+[*] 6
+[/list=1]
+
+[list=a]
+[*] a
+[*] b
+[*] c
+[/list]
+
+[list=a]
+[*] d
+[*] e
+[*] f
+[/list=a]
+
+[list=A]
+[*] A
+[*] B
+[*] C
+[/list]
+
+[list=A]
+[*] D
+[*] E
+[*] F
+[/list=A]
