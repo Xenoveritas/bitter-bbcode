@@ -19,3 +19,8 @@ exports.convertNewlinesToHTML = (text) ->
   # And convert
   text = text.replace(/\n/g, "<br>\n").replace(/<br>\n<br>\n/g, "</p>\n\n<p>")
   '<p>' + text + '</p>'
+
+# Checks to see if a URL is "valid" - currently that means starts with
+# "http", "https", or "ftp".
+exports.isValidURL = (url) ->
+  /^(?:https?|ftp):\/\//i.test(url)

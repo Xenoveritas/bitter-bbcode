@@ -55,11 +55,10 @@ BBCode            | Description                                        | Support
 [list=a]          | Alphabetically Ordered List                        | :x:
 [quote]           | Quote                                              | :white_check_mark:
 [quote="*name*"]  | Quote with a given name                            | :white_check_mark:
-[code]            | BBCode ignored code block                          | :warning:¹
-[code=*language*] | BBCode ignored code block with syntax highlighting | :warning:¹ ²
+[code]            | BBCode ignored code block                          | :white_check_mark:
+[code=*language*] | BBCode ignored code block with syntax highlighting | :warning:¹
 
-¹ Currently included in `<p>`/`<br>` creation
-² Syntax highlighting is not supported
+¹ Syntax highlighting is not supported
 
 ### BBCode by bulletin board software
 
