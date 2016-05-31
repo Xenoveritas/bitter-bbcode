@@ -6,20 +6,16 @@
 # A list of HTML blocks with potentially differing transformations.
 class BlockList
   constructor: ->
-    @firstBlock = null
-    @lastBlock = null
-
-  appendBlock: (block) ->
-    if block isnt null
-      if @firstBlock is null
-        @firstBlock = block
-        @lastBlock = block
-      else
-        @lastBlock.append block
-        @lastBlock = block
+    @blocks = []
 
   append: (html, newlines=true, smileys=true) ->
-    @appendBlock(new Block(html, newlines, smileys))
+    # If we're merging to a block with the same options, append.
+    if @blocks.length > 0
+      lastBlock = @blocks[@blocks.length-1]
+      if lastBlock.newlines is newlines and lastBlock.smileys is smileys
+        lastBlock.html += html
+        return lastBlock
+    @blocks.push(new Block(html, newlines, smileys))
 
   appendHTML: (html) ->
     @append(html)
@@ -30,40 +26,13 @@ class BlockList
   transform: (parser) ->
     if @firstBlock is null
       return ""
-    @firstBlock.merge()
-    # We need to go through the blocks anyway, so:
     html = []
-    block = @firstBlock
-    loop
+    for block in @blocks
       html.push(block.toHTML(parser))
-      if block.next?
-        block = block.next
-      else
-        @lastBlock = block
-        break
     html.join('')
 
 class Block
   constructor: (@html, @newlines = true, @smileys = true) ->
-
-  append: (block) ->
-    if block isnt null
-      block.prev = this
-      @next = block
-
-  # Merge matching blocks together. If a block has identical transforms, it will
-  # be merged into a new, single block.
-  merge: ->
-    current = this
-    next = current.next
-    while next?
-      if current.newlines is next.newlines and current.smileys is next.smileys
-        current.html += next.html
-        # Remove the merged block from the list
-        current.next = next.next
-        if next.next?
-          next.next.prev = current
-      next = next.next
 
   toHTML: (parser) ->
     text = @html
