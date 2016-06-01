@@ -3,7 +3,9 @@
 
 {convertNewlinesToHTML} = require './htmlutil'
 
-# A list of HTML blocks with potentially differing transformations.
+###
+A list of HTML blocks with potentially differing transformations.
+###
 class BlockList
   constructor: ->
     @blocks = []
@@ -24,7 +26,7 @@ class BlockList
   appendRawHTML: (html) ->
     @append(html, false, false)
 
-  transform: (parser) ->
+  toHTML: (parser) ->
     if @firstBlock is null
       return ""
     html = []
@@ -39,7 +41,7 @@ class Block
     text = @html
     if @newlines
       text = convertNewlinesToHTML(text)
-    if @smileys
+    if @smileys and parser?
       text = parser.replaceSmileys(text)
     text
 

@@ -3,3 +3,6 @@
 
 # Ignore installed modules
 /node_modules
+
+# Generated documentation
+/doc

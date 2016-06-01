@@ -31,6 +31,16 @@ bbcode("Some [b]text[/b]");
 // Result: "<p>Some <b>text</b></p>");
 ```
 
+## More advanced use
+
+```javascript
+var bbcode = require('bbcode');
+var parser = bbcode();
+var bbdom = parser.parse("[b]Some BB Code[/b]");
+blocks = bbdom.toBlocks();
+blocks.toHTML();
+```
+
 ## BBCode Compatibility
 
 This is currently targeted at supporting phpBB-style BBCode, but with the ability to expand it to support the BBCode other forums support.

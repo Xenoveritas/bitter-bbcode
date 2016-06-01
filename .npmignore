@@ -5,3 +5,6 @@
 
 # Ignore the compatibility information: it's documentation
 /compat
+
+# Generated documentation
+/doc

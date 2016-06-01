@@ -19,25 +19,65 @@ class Tag
   constructor: (nodeClass) ->
     @nodeClass = nodeClass
 
-  # Indicates that a tag for this tag class is starting. This method should
-  # create and return an appropriate BBNode that will handle the remaining
-  # parse events. If this tag cannot handle this event (for example, the
-  # arguments are invalid), it should return <code>null</code> in which case it
-  # will be converted into a corresponding text event and delivered to the
-  # current node.
+  ###
+  Indicates that a tag for this tag class is starting. This method should create
+  and return an appropriate BBNode that will handle the remaining parse events.
+  If this tag cannot handle this event (for example, the arguments are invalid),
+  it should return <code>null</code> in which case it will be converted into a
+  corresponding text event and delivered to the current node.
+
+  @param [TagEvent] event
+    the start tag event
+  @return [BBNode] either a new {BBNode} that provides the implementation of
+    this tag or `null` if the event cannot be used to create a {BBNode}
+  ###
   onStartTag: (event) ->
     if event.arg?
       null
     else
       new @nodeClass()
 
+###
+A very simple implementation of a tag. This works with any tag that is of the
+form `[tag]Contents[/tag]`. It allows other tags to be nested within them and
+simply surrounds its contents with the given starting and ending HTML.
+###
 class SimpleTag extends Tag
-  constructor: (htmlElement) ->
+  ###
+  Create a new SimpleTag.
+  @overload constructor(htmlElement)
+    @param [String] htmlElement
+      the name of the HTML element. This is automatically surrounded with `<`
+      and `>`: it's the same as calling the two argument caller with
+      `"<#{htmlElement}>", "</#{htmlElement}>"`.
+  @overload constructor(htmlStart, htmlEnd)
+    @param [String] htmlStart
+      the HTML to replace the start tag with
+    @param [String] htmlEnd
+      the HTML to replace the end tag with
+  @overload constructor()
+    You may, optionally, not pass in any HTML to use. In this case, the start
+    and ending HTML is simply blank.
+  ###
+  constructor: (htmlStart, htmlEnd) ->
     super()
-    if htmlElement?
-      @htmlStart = "<#{htmlElement}>"
-      @htmlEnd = "</#{htmlElement}>"
+    if htmlEnd?
+      @htmlStart = htmlStart
+      @htmlEnd = htmlEnd
+    else if htmlStart?
+      @htmlStart = "<#{htmlStart}>"
+      @htmlEnd = "</#{htmlStart}>"
+    else
+      @htmlStart = ""
+      @htmlEnd = ""
 
+  ###
+  Returns `null` if the event has an argument.
+  @param [TagEvent] event
+    the event
+  @return [BBElement] either a new {BBElement} with the starting and ending
+    HTML for this node or `null` if there was an argument in the start tag
+  ###
   onStartTag: (event) ->
     if event.arg?
       null
