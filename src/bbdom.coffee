@@ -112,6 +112,35 @@ class BBImgElement extends BBNode
     else
       list.appendHTML(escapeHTML(@rawStart + url + @rawEnd))
 
+class BBListElement extends BBElement
+  constructor: (@type) ->
+    if @type of BBListElement.ALLOWED_TYPES
+      # This is an interesting question: set a CSS class or set the style?
+      # For now, do both: that way it works if unstyled AND it can be styled.
+      listStyle = BBListElement.ALLOWED_TYPES[@type]
+      start = "<ol class=\"bbcode-list-#{listStyle}\" style=\"list-style-type: #{listStyle}\">"
+      end = "</ol>"
+    else
+      start = "<ul>"
+      end = "</ul>"
+    super(start, end, true)
+
+  @ALLOWED_TYPES = {
+    '1': 'decimal',
+    'a': 'lower-alpha',
+    'A': 'upper-alpha'
+  }
+
+class BBListItemElement extends BBElement
+  constructor: ->
+    super("<li>", "</li>", true)
+
+  onChildTag: (event) ->
+    if event.tag == '*'
+      event.closeTag()
+    # In any case, allow it
+    true
+
 class BBPreElement extends BBNode
   constructor: (@element = "pre") ->
     super
@@ -158,6 +187,8 @@ exports.BBQuoteElement = BBQuoteElement
 exports.BBImgElement = BBImgElement
 exports.BBPreElement = BBPreElement
 exports.BBCodeElement = BBCodeElement
+exports.BBListElement = BBListElement
+exports.BBListItemElement = BBListItemElement
 
 exports.BBText = BBText
 exports.BBDocument = BBDocument

@@ -1,0 +1,7 @@
+# Files that shouldn't be packaged
+
+# Ignore src: it's CoffeeScript
+/src
+
+# Ignore the compatibility information: it's documentation
+/compat

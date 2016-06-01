@@ -27,11 +27,11 @@ BBCode               | This libary        | phpBB
 [url=*url*]          | :white_check_mark: | :white_check_mark:
 [url="*url*"]        | :white_check_mark: | :x:
 [img]                | :white_check_mark: | :white_check_mark:
-[list]               | :x:                | :white_check_mark:
-[list=1]...[/list]   | :x:                | :white_check_mark:
-[list=1]...[/list=1] | :x:                | :x:
-[list=a]...[/list]   | :x:                | :white_check_mark:
-[list=a]...[/list=a] | :x:                | :x:
+[list]               | :white_check_mark: | :white_check_mark:
+[list=1]...[/list]   | :white_check_mark: | :white_check_mark:
+[list=1]...[/list=1] | :white_check_mark: | :x:
+[list=a]...[/list]   | :white_check_mark: | :white_check_mark:
+[list=a]...[/list=a] | :white_check_mark: | :x:
 [quote]              | :white_check_mark: | :white_check_mark:
 [quote=*name*]       | :white_check_mark: | :x:
 [quote="*name*"]     | :white_check_mark: | :white_check_mark:

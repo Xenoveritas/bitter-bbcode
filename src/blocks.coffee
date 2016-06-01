@@ -9,7 +9,8 @@ class BlockList
     @blocks = []
 
   append: (html, newlines=true, smileys=true) ->
-    # If we're merging to a block with the same options, append.
+    # If we're appending to a block with the same options, just add the HTML
+    # onto the existing block.
     if @blocks.length > 0
       lastBlock = @blocks[@blocks.length-1]
       if lastBlock.newlines is newlines and lastBlock.smileys is smileys
@@ -32,7 +33,7 @@ class BlockList
     html.join('')
 
 class Block
-  constructor: (@html, @newlines = true, @smileys = true) ->
+  constructor: (@html, @newlines = true, @smileys = true, @paragraph = true) ->
 
   toHTML: (parser) ->
     text = @html

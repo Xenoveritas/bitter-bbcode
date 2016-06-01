@@ -50,17 +50,21 @@ BBCode            | Description                                        | Support
 [url]             | Link                                               | :white_check_mark:
 [url=*url*]       | Link                                               | :white_check_mark:
 [img]             | Image                                              | :white_check_mark:
-[list]            | Unordered List                                     | :x:
-[list=1]          | Numerically Ordered List                           | :x:
-[list=a]          | Alphabetically Ordered List                        | :x:
+[list]            | Unordered List                                     | :white_check_mark:
+[list=1]          | Numerically Ordered List                           | :white_check_mark:
+[list=a]          | Alphabetically Ordered List                        | :white_check_mark:
 [quote]           | Quote                                              | :white_check_mark:
 [quote="*name*"]  | Quote with a given name                            | :white_check_mark:
 [code]            | BBCode ignored code block                          | :white_check_mark:
 [code=*language*] | BBCode ignored code block with syntax highlighting | :warning:¹
+[flash]           | Embedding flash content                            | :x:²
 
 ¹ Syntax highlighting is not supported
+² It is unlikely that embedding Flash will ever be supported by this library
 
 ### BBCode by bulletin board software
+
+Check out the [full comparison tables](compat/Comparison Tables.md), but a quick run-down of tags and how they're supported:
 
 BBCode               | phpBB
 ---------------------|-------------------

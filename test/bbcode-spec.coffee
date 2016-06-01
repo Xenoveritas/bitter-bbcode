@@ -23,6 +23,14 @@ describe "BBCode parser", ->
     it "handles nesting correctly", ->
       text = bbcode "[b][i]Test[/i][/b]"
       expect(text).to.equal "<p><b><i>Test</i></b></p>"
+    it "handles tag soup", ->
+      # This test is likely going to be changed in the future. It shows
+      # current behavior which may or may not be correct.
+      expect(bbcode("[b][i]Tag[/b] soup[/i]")).to.equal "<p><b><i>Tag</i></b> soup[/i]</p>"
+    it "handles closing tags without opening tags", ->
+      expect(bbcode("[/b] Nothing [/b]")).to.equal "<p>[/b] Nothing [/b]</p>"
+    it "handles open tags that are never closed", ->
+      expect(bbcode("[b][i]It never ends.")).to.equal "<p><b><i>It never ends.</i></b></p>"
     it "handles tags over multiple lines", ->
       text = bbcode """
         [b]Bold this text
@@ -71,3 +79,98 @@ describe "BBCode parser", ->
         This is some code.
         </code></pre>
       """
+
+  describe "when handling [list] tags", ->
+    describe "with no arguments", ->
+      it "generates a list", ->
+        expect(bbcode("""
+          [list][*]Item one
+          [*]Item two
+          [*]Item three[/list]
+        """)).to.equal """
+          <p><ul><li>Item one<br>
+          </li><li>Item two<br>
+          </li><li>Item three</li></ul></p>
+        """
+        # FIXME: The bottom is what we really want but isn't possible. Yet.
+        # """)).to.equal """
+        #   <ul><li>Item one
+        #   <li>Item two
+        #   <li>Item three</ul>
+        # """
+    # FIXME: The tests for 1, a, and A are all basically identical and should be
+    # generated instead of copy-pasted
+    describe "with argument 1", ->
+      it "generates an ordered list", ->
+        # It could also be argued that this should return a blank list.
+        expect(bbcode("""
+          [list=1][*]Item one
+          [*]Item two
+          [*]Item three[/list]
+        """)).to.equal """
+          <p><ol class="bbcode-list-decimal" style="list-style-type: decimal"><li>Item one<br>
+          </li><li>Item two<br>
+          </li><li>Item three</li></ol></p>
+        """
+        # FIXME: Same caveat as the [list] test - break and paragraph generation still need fixing
+    describe "with argument 1 duplicated in the closing tag", ->
+      it "generates an ordered list", ->
+        # It could also be argued that this should return a blank list.
+        expect(bbcode("""
+          [list=1][*]Item one
+          [*]Item two
+          [*]Item three[/list=1]
+        """)).to.equal """
+          <p><ol class="bbcode-list-decimal" style="list-style-type: decimal"><li>Item one<br>
+          </li><li>Item two<br>
+          </li><li>Item three</li></ol></p>
+        """
+        # FIXME: Same caveat as the [list] test - break and paragraph generation still need fixing
+    describe "with argument a", ->
+      it "generates a lower-alpha ordered list", ->
+        expect(bbcode("""
+          [list=a][*]Item a
+          [*]Item b
+          [*]Item c[/list]
+        """)).to.equal """
+          <p><ol class="bbcode-list-lower-alpha" style="list-style-type: lower-alpha"><li>Item a<br>
+          </li><li>Item b<br>
+          </li><li>Item c</li></ol></p>
+        """
+        # FIXME: Same caveat as the [list] test - break and paragraph generation still need fixing
+    describe "with argument a duplicated in the closing tag", ->
+      it "generates a lower-alpha ordered list", ->
+        expect(bbcode("""
+          [list=a][*]Item a
+          [*]Item b
+          [*]Item c[/list=a]
+        """)).to.equal """
+          <p><ol class="bbcode-list-lower-alpha" style="list-style-type: lower-alpha"><li>Item a<br>
+          </li><li>Item b<br>
+          </li><li>Item c</li></ol></p>
+        """
+        # FIXME: Same caveat as the [list] test - break and paragraph generation still need fixing
+    describe "with argument A", ->
+      it "generates an upper-alpha ordered list", ->
+        expect(bbcode("""
+          [list=A][*]Item A
+          [*]Item B
+          [*]Item C[/list]
+        """)).to.equal """
+          <p><ol class="bbcode-list-upper-alpha" style="list-style-type: upper-alpha"><li>Item A<br>
+          </li><li>Item B<br>
+          </li><li>Item C</li></ol></p>
+        """
+        # FIXME: Same caveat as the [list] test - break and paragraph generation still need fixing
+    describe "with argument A duplicated in the closing tag", ->
+      it "generates an upper-alpha ordered list", ->
+        expect(bbcode("""
+          [list=A][*]Item A
+          [*]Item B
+          [*]Item C[/list=A]
+        """)).to.equal """
+          <p><ol class="bbcode-list-upper-alpha" style="list-style-type: upper-alpha"><li>Item A<br>
+          </li><li>Item B<br>
+          </li><li>Item C</li></ol></p>
+        """
+        # FIXME: Same caveat as the [list] test - break and paragraph generation still need fixing

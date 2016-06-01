@@ -34,8 +34,9 @@ class Tag
 class SimpleTag extends Tag
   constructor: (htmlElement) ->
     super()
-    @htmlStart = "<#{htmlElement}>"
-    @htmlEnd = "</#{htmlElement}>"
+    if htmlElement?
+      @htmlStart = "<#{htmlElement}>"
+      @htmlEnd = "</#{htmlElement}>"
 
   onStartTag: (event) ->
     if event.arg?
@@ -84,6 +85,36 @@ class CodeTag extends Tag
     # We can optionally have an arg that tells us what type of code it is
     new bbdom.BBCodeElement(event.raw)
 
+class ListTag extends Tag
+  constructor: ->
+    super()
+
+  onStartTag: (event) ->
+    if event.arg?
+      if event.arg of bbdom.BBListElement.ALLOWED_TYPES
+        new bbdom.BBListElement(event.arg)
+      else
+        console.log("Invalid list type [" + event.arg + "]")
+        null
+    else
+      new bbdom.BBListElement()
+
+class ListItemTag extends Tag
+  constructor: ->
+    super("li")
+
+  onStartTag: (event) ->
+    # This is one of the few tags that cares about the state of the parse - this
+    # only makes sense inside a [list] tag of some variety.
+    if event.state.isParentTag("list")
+      # OK, we can append an LI tag.
+      new bbdom.BBListItemElement()
+    else if event.state.isParentTags("*", "list")
+      # Things are weird here - we want to close the parent list item.
+    else
+      # In any other case, ignore this.
+      null
+
 # Exports
 
 exports.Tag = Tag
@@ -92,3 +123,5 @@ exports.URLTag = URLTag
 exports.ImgTag = ImgTag
 exports.QuoteTag = QuoteTag
 exports.CodeTag = CodeTag
+exports.ListTag = ListTag
+exports.ListItemTag = ListItemTag
