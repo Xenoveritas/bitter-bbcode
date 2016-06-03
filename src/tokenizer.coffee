@@ -1,18 +1,48 @@
-# Module for the tokenizer.
+# BBCode tokenizer.
 
+###
+Tokenizer for tokenizing BBCode tags.
+@private
+###
 class TagTokenizer
+  ###
+  Create a new TagTokenizer to tokenize the given string.
+
+  @param [String] str
+    the string to tokenize
+  ###
   constructor: (str) ->
     @str = str
     @currentOffset = 0
     @nextToken = @_next()
 
-  # Determines if the text is a valid tag (allowed between [ and ])
+  ###
+  Determines if the text is a valid tag (allowed between [ and ]). This is
+  currently a member method so that future options can change what's considered
+  valid. Currently only A-Z (case insensitive) and a single asterisk (for `[*]`)
+  are allowed.
+
+  @param [String] tag
+    the tag to test
+  @return [Boolean]
+    whether the tag is a valid tag
+  ###
   isValidTag: (tag) ->
     /^\/?(?:[A-Za-z]+|\*)(?:=[^\]]*|="[^"]*")?$/.test(tag)
 
+  ###
+  Determines if another token can be read by {#next} or if the end of the string
+  has been reached.
+
+  @return [Boolean]
+    whether another token can be fetched with {#next}
+  ###
   hasNext: ->
     @nextToken != null
 
+  ###
+  Gets the next token if there is one, otherwise raises an exception.
+  ###
   next: ->
     if (@nextToken == null)
       throw Error("No more tokens")
@@ -31,9 +61,10 @@ class TagTokenizer
       result.type = 'endtag';
     result
 
-  #
-  # Internal implementation of next, before multiple text tokens are merged.
-  #
+  ###
+  Internal implementation of next, before multiple text tokens are merged.
+  @private
+  ###
   _next: ->
     #console.log("_next(%d)", this.currentOffset);
     if (@currentOffset >= @str.length)

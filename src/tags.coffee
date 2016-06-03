@@ -1,20 +1,24 @@
-# Module containing just the basic tag implementations.
+###
+Module containing tag implementations.
+###
 
 bbdom = require './bbdom'
 {isValidURL} = require "./htmlutil"
 
-# A BBCode Tag.
-#
-# The Tag class is basically a BBNode factory - a class that can
-# create BBNodes inside the parse tree.
-#
-# As such the tag class itself only handles receives events that create BBNodes.
-# Once the BBNode is added and stuffed on the top of the stack, it receives
-# further parse events until the parse is complete.
-#
-# The default Tag class can be given a BBNode class that will be instantiated
-# whenever onStartTag is received. If the start tag has arguments, it will be
-# assumed to be invalid and nothing will be added.
+###
+A BBCode Tag.
+
+The Tag class is basically a BBNode factory - a class that can create BBNodes
+inside the parse tree.
+
+As such the tag class itself only handles receives events that create BBNodes.
+Once the BBNode is added and stuffed on the top of the stack, it receives
+further parse events until the parse is complete.
+
+The default Tag class can be given a BBNode class that will be instantiated
+whenever onStartTag is received. If the start tag has arguments, it will be
+assumed to be invalid and nothing will be added.
+###
 class Tag
   constructor: (nodeClass) ->
     @nodeClass = nodeClass
@@ -84,10 +88,26 @@ class SimpleTag extends Tag
     else
       new bbdom.BBElement(@htmlStart, @htmlEnd)
 
+###
+Implementation of the `[url]` tag.
+###
 class URLTag extends Tag
+  ###
+  Construct a new URLTag.
+  ###
   constructor: ->
     super(null)
 
+  ###
+  Start a new `[url]` tag. If given an argument, returns `null` if the URL isn't
+  "valid" as determined by {htmlutil~isValidURL}. Otherwise returns a new
+  {BBURLElement}.
+
+  @param [TagEvent] event
+    the open tag event
+  @return [BBURLElement]
+    the new `[url]` element or `null` if the argument was rejected
+  ###
   onStartTag: (event) ->
     if event.arg?
       if isValidURL event.arg
@@ -98,10 +118,25 @@ class URLTag extends Tag
       # How this gets handled depends on the content.
       new bbdom.BBURLElement(event.raw)
 
+###
+Implementation of the `[img]` tag.
+###
 class ImgTag extends Tag
+  ###
+  Construct a new ImgTag.
+  ###
   constructor: ->
     super(null)
 
+  ###
+  Start a new `[img]` tag - `[img]` tags do not accept arguments so this returns
+  `null` if there is an argument.
+
+  @param [TagEvent] event
+    the open tag event
+  @return [BBImgElement]
+    the new `[img]` element or `null` if the tag had an argument
+  ###
   onStartTag: (event) ->
     if event.arg?
       null

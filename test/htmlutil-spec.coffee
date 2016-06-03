@@ -5,8 +5,12 @@ describe "HTML utility functions", ->
   describe "escapeHTML", ->
     it "escapes <, >, and &", ->
       expect(htmlutil.escapeHTML('1 < 2 & 2 > 1')).to.equal "1 &lt; 2 &amp; 2 &gt; 1"
+    it "doesn't escape \" and '", ->
+      expect(htmlutil.escapeHTML("\"It's a wonderful world.\"")).to.equal "\"It's a wonderful world.\""
 
   describe "escapeHTMLAttr", ->
+    it "escapes <, >, and &", ->
+      expect(htmlutil.escapeHTMLAttr('1 < 2 & 2 > 1')).to.equal "1 &lt; 2 &amp; 2 &gt; 1"
     it "escapes \" and '", ->
       expect(htmlutil.escapeHTMLAttr("\"It's a wonderful world.\"")).to.equal "&quot;It&#39;s a wonderful world.&quot;"
 
