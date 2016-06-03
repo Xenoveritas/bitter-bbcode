@@ -1,8 +1,8 @@
 # bitter-bbcode
 
-A simple BBCode parser.
+A simple BBCode parser. It's "bitter" because it's written in CoffeeScript, you see.
 
-This is split off from my original implementation of a BBCode parser in the BBCode preview package. The concept is to support some form of "generic" BBCode out of the box that covers the majority of software platforms out there, while being extensible enough that new BBCodes can be added without breaking anything.
+The concept is to support some form of "generic" BBCode out of the box that covers the majority of software platforms out there, while being extensible enough that new BBCodes can be added without breaking anything.
 
 Because it parses to a "DOM" it should be possible to export to destinations that aren't BBCode, for example, it should be possible to write a BBCode to Markdown translator.
 
@@ -27,7 +27,7 @@ Becomes:
 ## Basic Usage
 
 ```javascript
-var bbcode = require('bbcode');
+var bbcode = require('bitter-bbcode');
 
 bbcode("Some [b]text[/b]");
 // Result: "<p>Some <b>text</b></p>");
@@ -36,7 +36,7 @@ bbcode("Some [b]text[/b]");
 ## More advanced use
 
 ```javascript
-var bbcode = require('bbcode');
+var bbcode = require('bitter-bbcode');
 var parser = bbcode();
 var bbdom = parser.parse("[b]Some BB Code[/b]");
 blocks = bbdom.toBlocks();

@@ -9,7 +9,7 @@ First, a list of the various tested forums and forums that may be tested in the 
 And some other BBCode-supporting forums that may be tested "sometime in the future":
 
  * [Vanilla Forums](https://vanillaforums.org/)
- * The Drupal BBCode module does
+ * The Drupal BBCode module
  * Maybe something based on [the PHP bbcode module](http://php.net/manual/en/book.bbcode.php) assuming anyone really uses it
 
 ## Basic Handling
